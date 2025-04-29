@@ -1,0 +1,49 @@
+
+
+<div>
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Student List</h2>
+        <h5>Total Students: <span id="totalStudents"><%= users.length %></span></h5>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex justify-content-between mb-3">
+        <!-- <button class="btn btn-danger" id="deleteSelected">Delete</button> -->
+        <button class="btn btn-primary" id="printList" onclick="window.print()">Print List</button>
+    </div>
+
+    <!-- Student Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <!-- <th><input type="checkbox" id="selectAll"></th> -->
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                </tr>
+            </thead>
+            <tbody id="studentTableBody">
+                <!-- Dynamic rows will be inserted here -->
+                 <% if(users.length > 0){ %>
+                 <% users.forEach(user => { %>
+                     <tr>
+                    <!-- <td><input type="checkbox" class="studentCheckbox"></td> -->
+                    <td><%= user.name %></td>
+                    <td><%= user.gender %></td>
+                    <td><%= user.email %></td>
+                    <td><%= user.mobile %></td>
+                </tr>
+                <% });}else{ %>
+                    <h2>No users found...</h2>
+                <% } %>
+               
+             
+            </tbody>
+        </table>
+    </div>
+</div>
+
+   
