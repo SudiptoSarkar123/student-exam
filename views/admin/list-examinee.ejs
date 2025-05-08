@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <title>Dashboard - SB Admin</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <link href="/css/styles.css" rel="stylesheet" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+</head>
+
+<body class="sb-nav-fixed">
+    <!-- header section here -->
+    <%-include('../layouts/nav.ejs')%>
+        <!-- header end -->
+        <div id="layoutSidenav">
+            <!-- sidenav -->
+            <%-include('../layouts/sidebar.ejs')%>
+                <!-- sidenav end -->
+                <div id="layoutSidenav_content">
+                    <main>
+                        <div class="container-fluid px-4">
+                            <h1 class="mt-4">Student List</h1>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <!-- <th><input type="checkbox" id="selectAll"></th> -->
+                                            <th>Name</th>
+                                            <th>Gender</th>
+                                            <th>Email</th>
+                                            <th>Mobile</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="studentTableBody">
+                                        <!-- Dynamic rows will be inserted here -->
+
+
+
+                                    </tbody>
+                                </table>
+                                <div class="modal fade" id="editStudentModal" tabindex="-1"
+                                    aria-labelledby="editStudentModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+
+                                        <form class="modal-content" id="edit-student-form">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Edit Student</h5>
+                                                <button type="button" class="btn-close"
+                                                    data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div id="messageDiv" class="mb-3"></div>
+                                                <!-- Hidden input -->
+                                                <input type="hidden" id="studentId" name="studentId">
+
+
+                                                <div class="mb-3">
+                                                    <label for="name" class="form-label">Full Name</label>
+                                                    <input type="text" class="form-control" id="name" name="name"
+                                                        placeholder="Enter your full name" required>
+                                                </div>
+                                                <!-- // Gender -->
+                                                <div class="mb-3">
+                                                    <label for="gender" class="form-label">Gender</label>
+                                                    <select class="form-select" id="gender" name="gender" required>
+                                                        <option value="male">Male</option>
+                                                        <option value="female">Female</option>
+                                                        <option value="other">Other</option>
+                                                    </select>
+                                                </div>
+                                                <!-- // Email -->
+                                                <div class="mb-3">
+                                                    <label for="email" class="form-label">Email</label>
+                                                    <input type="email" class="form-control" id="email" name="email"
+                                                        placeholder="Enter your email" required>
+                                                </div>
+
+                                                <!-- // Mobile -->
+                                                <div class="mb-3">
+                                                    <label for="mobile" class="form-label">Mobile Number</label>
+                                                    <input type="text" class="form-control" id="mobile" name="mobile"
+                                                        placeholder="Enter your mobile number" required>
+                                                </div>
+
+
+
+
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-success">Save Changes</button>
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                            </div>
+                                        </form>
+
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </main>
+                    <!-- footer section here -->
+
+                    <!-- footer section ends here -->
+                </div>
+        </div>
+
+        <script>
+            $(document).ready(function () {
+
+                function fetchStudents() {
+
+                    $.ajax({
+                        url: '/admin/student-list',
+                        type: 'GET',
+                        success: function (response) {
+                            console.log(response);
+                            if (response.status) {
+                                let html = '';
+                                if (response.data.length > 0) {
+
+                                    for (const student of response.data) {
+                                        html += `
+                                    <tr>             
+                                        <td>${student.name}</td>
+                                        <td>${student.gender}</td>
+                                        <td>${student.email}</td>
+                                        <td>${student.mobile}</td>
+                                        <td class="text-center">
+                                        <button class="btn btn-sm btn-warning me-1 edit-btn" data-student-id="${student._id}">Edit</button>
+                                        <button class="btn btn-sm btn-danger delete-btn" data-student-id="${student._id}">Delete</button>
+                                        </td>
+                                     </tr>   
+                                    `
+
+                                    }
+
+                                } else {
+                                    html += '<tr><td colspan="4">No students found</td> <tr>'
+                                }
+
+                                $('#studentTableBody').html(html)
+
+
+                            }
+
+                        }
+                    })
+
+                }
+
+                $(document).on('click', '.edit-btn', function () {
+                    const studentId = $(this).data('student-id');
+                    console.log('student id is', studentId)
+                    editStudentModal(studentId);
+                });
+
+                function editStudentModal(id) {
+
+                    $.ajax({
+                        url: '/admin/student/' + id,
+                        type: 'GET',
+                        success: function (response) {
+                            if (response.status) {
+                                console.log(response.data);
+                                const { _id, name, email, gender, mobile } = response.data;
+
+                                $('#studentId').val(_id);
+                                $('#name').val(name);
+                                $('#email').val(email);
+                                $('#mobile').val(mobile);
+                                $('#gender').val(gender);
+
+
+                                const modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+                                modal.show();
+                            }
+
+
+                        },
+                        error: function (error) {
+                            const errMsg = error.responseJSON && error.responseJSON.message ? error.responseJSON.message : 'Something went wrong!';
+                            alert(errMsg);
+                        }
+
+                    })
+
+                }
+
+                $('#edit-student-form').submit(function (e) {
+                    e.preventDefault();
+                    const studentId = $('#studentId').val();
+                    const formData = $(this).serialize();
+                    $.ajax({
+                        url: '/admin/student/' + studentId,
+                        type: 'POST',
+                        data: formData,
+                        success: function (response) {
+                            console.log(response);
+                            if (response.status) {
+                                dispMessage(response.message, 'success');
+
+
+                            }
+
+                        },
+
+                        error: function (error) {
+                            const errMsg = error.responseJSON && error.responseJSON.message ? error.responseJSON.message : 'Something went wrong!';
+                            dispMessage(errMsg, 'danger')
+
+                        }
+                    })
+
+
+
+                })
+
+                fetchStudents();
+
+
+                    function dispMessage(message, type = 'success') {
+                        $('#messageDiv').html(`
+    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    `);
+
+
+
+                }
+
+            })
+        </script>
+
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <script src="/js/scripts.js"></script>
+        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"
+            crossorigin="anonymous"></script> -->
+        <!-- <script src="/assets/demo/chart-area-demo.js"></script> -->
+        <!-- <script src="/assets/demo/chart-bar-demo.js"></script> -->
+        <!-- <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
+            crossorigin="anonymous"></script>
+        <script src="/js/datatables-simple-demo.js"></script> -->
+</body>
+
+</html>

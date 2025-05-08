@@ -23,7 +23,7 @@ const countQuestions = async (examId)=>{
     }
     ])
     if(result.length > 0){
-        return result[0].totalQuestions
+        return result[0].totalQuestions ;
     }else{
         return 1;
     }

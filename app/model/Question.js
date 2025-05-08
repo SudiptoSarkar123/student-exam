@@ -6,7 +6,7 @@ const questionSchema = mongoose.Schema({
     options:[{type:String}],
     correctAnswer:{type:String},
     marks:{type:Number,default:1}
-})
+},{timestamps:true})
 
 
 module.exports = mongoose.model('Question',questionSchema)

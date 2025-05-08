@@ -1,101 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-<%-include('layouts/head')%>
-
-    <body>
-        <!-- Navbar -->
-        <%-include('layouts/nav')%>
-
-            <!-- Sidebar and Main Content -->
-            <div class="d-flex">
-                <!-- Sidebar -->
-                <%-include('layouts/sidebar')%>
-
-                    <!-- Main Content -->
-                    <div class="p-4" style="flex-grow: 1;" id="mainContent">
-                        <h1>Welcome to the Admin Dashboard</h1>
-                        <p>Select an option from the sidebar to get started.</p>
-                        <div class="row mt-4">
-                            <div class="col-md-3">
-                                <span id="" class="btn btn-primary w-100 mb-3 loadStudentList">List of Students</span>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="/admin/add-exam" class="btn btn-success w-100 mb-3">Add Exam</a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="/admin/add-question" class="btn btn-warning w-100 mb-3">Add Question</a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="/admin/accounts" class="btn btn-info w-100 mb-3">Accounts</a>
-                            </div>
-                        </div>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Dashboard - SB Admin</title>
+        <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+        <link href="/css/styles.css" rel="stylesheet" />
+        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    </head>
+    <body class="sb-nav-fixed">
+        <!-- header section here -->
+         <%-include('./layouts/nav.ejs')%>
+        <!-- header end -->
+        <div id="layoutSidenav">
+            <!-- sidenav -->
+            <%-include('./layouts/sidebar.ejs')%>
+            <!-- sidenav end -->
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">Dashboard</h1>
+                        
                     </div>
+                </main>
+                <!-- footer section here -->
+           
+                 <!-- footer section ends here -->
             </div>
-
-            <!-- Bootstrap JS -->
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-            <script>
-                // Load List of Students dynamically
-                $('.loadStudentList').on('click', function () {
-                    $.ajax({
-                        url: '/admin/list-examinee',
-                        method: 'GET',
-                        success: function (html) {
-                            $('#mainContent').html(html);
-                        },
-                        error: function (xhr, status, error) {
-                            console.error('Error loading student list:', error);
-                        }
-                    });
-                });
-
-                $('#editButton').on('click', function () {
-                    console.log('Edit Button Clicked')
-                    $.ajax({
-                        url: '/admin/edit-student',
-                        method: 'GET',
-                        success: function (html) {
-                            $('#mainContent').html(html);
-                        }
-                    })
-                })
-
-
-
-
-                $(document).ready(function () {
-                    // Edit Button Click
-                    $('.editButton').click(function () {
-                        var studentId = $(this).data('data-id'); // Get the student ID from the data-id attribute
-
-                        // Use AJAX to fetch the edit form
-                        $.ajax({
-                            url: '/admin/edit-student /' + studentId, // Backend route to fetch the edit form
-                            method: 'GET',
-                            success: function (html) {
-                                // Load the edit form into the #editForm div
-                                $('#editForm').html(html);
-                            },
-                            error: function (xhr, status, error) {
-                                console.error('Error loading edit form:', error);
-                            }
-                        });
-                    });
-                });
-                // Delete Student dynamically
-                $('#deleteSelected').on('click', function () {
-                    $.ajax({
-                        url: '/admin/delete-examinee/',
-                        method: 'GET',
-                        success: function () {
-                            // Add code here if needed
-                        }
-                    })
-                })
-
-            </script>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="/js/scripts.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+        <script src="/assets/demo/chart-area-demo.js"></script>
+        <script src="/assets/demo/chart-bar-demo.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js" crossorigin="anonymous"></script>
+        <script src="/js/datatables-simple-demo.js"></script>
     </body>
-
 </html>

@@ -4,7 +4,7 @@ const Student = require('../model/Student')
 const Exam = require('../model/Exam')
 const Question = require('../model/Question')
 const jwt = require('jsonwebtoken')
-const { comparePassword, hashPassword ,countQuestions} = require('../helper/Auth');
+const { comparePassword, hashPassword, countQuestions } = require('../helper/Auth');
 const flash = require('connect-flash');
 class AdminController {
     async adminLogin(req, res) {
@@ -21,13 +21,13 @@ class AdminController {
                 _id: admin._id,
                 name: admin.name,
                 email: admin.email
-            }, process.env.SECRET_KEY, { expiresIn: '30m' })
+            }, process.env.SECRET_KEY, { expiresIn: '120m' })
 
             res.cookie("authToken", token, {
                 httpOnly: true,
                 secure: false,
                 sameSite: "strict",
-                maxAge: 30 * 60 * 1000 // 30mins
+                maxAge: 120 * 60 * 1000 // 30mins
             })
 
             return res.redirect(`/admin/adminDash`)
@@ -38,17 +38,58 @@ class AdminController {
         }
     }
 
-    async editExaminee(req, res) {
+    async listExaminee(req, res) {
         try {
-            const {name,gender,email,subject,mobile,} = req.body;
+            const students = await Student.find({});
+            return res.status(200).json({
+                status: true,
+                message: 'Students data fetched successfully',
+                data: students
+            })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({
+                status: false,
+                message: 'Something went wrong',
+            })
+
+        }
+    }
+    async updateExaminee(req, res) {
+        try {
+            const { name, gender, email, mobile, } = req.body;
             console.log(req.body)
-            if(!name || !gender || !email || !subject || !mobile){
+            if (!name || !gender || !email || !mobile) {
                 return res.send('All filds are required')
             }
-            const findById = await Student.findOneAndUpdate({_id:req.params.id},{
-                $set:{name,gender,email,subject,mobile}
+
+            const student = await Student.findById(req.params.id);
+            if (!student) {
+
+                return res.status(400).json({
+                    status: false,
+                    message: 'Student not found'
+                })
+            }
+
+            const updatedStudent = await Student.findByIdAndUpdate(req.params.id, {
+                $set: { name, gender, email, mobile }
             })
-            
+
+            if (!updatedStudent) {
+                return res.status(400).json({
+                    status: false,
+                    message: 'Student not found'
+                })
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: 'Student updated successfully'
+            })
+
+
+
             return res.redirect('/admin/adminDash')
 
         } catch (error) {
@@ -59,7 +100,7 @@ class AdminController {
 
     async deleteExaminee(req, res) {
         try {
-            const {id} = req.params
+            const { id } = req.params
             const deleteStudent = await Student.findByIdAndDelete(id)
             return res.redirect('/admin/adminDash')
         } catch (error) {
@@ -68,44 +109,131 @@ class AdminController {
         }
     }
 
-    async addExams(req,res){
-        const {name,subject,duration,totalMarks,startDate } = req.body ;
+
+    // Exam Controller
+
+    async getAllExams(req, res) {
+        try {
+            const exams = await Exam.find({});
+            return res.status(200).json({
+                status: true,
+                message: 'Exams data fetched successfully',
+                data: exams
+            })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({
+                status: false,
+                message: 'Something went wrong',
+            })
+
+        }
+    }
+
+    async getSingleExam(req, res) {
+        try {
+            const { id } = req.params
+            const exam = await Exam.findById(id);
+            console.log(exam)
+            return res.status(200).json({
+                status: true,
+                message: 'Exam data fetched successfully',
+                data: exam
+            })
+        } catch (error) {
+            console.log(error)
+            return res.status(400).json({
+                status: false,
+                message: 'Failed to fetch exam data',
+            })
+        }
+    }
+
+    async updateExam(req, res) {
+        try {
+            console.log('inside update exam')
+            const id = req.params.id;
+            const { name, subject, duration, marksPerQuestion, startDate, endDate } = req.body
+            console.log(req.body)
+
+            if (!name || !subject || !duration || !marksPerQuestion || !startDate || !endDate) {
+                console.log('all fileds required...')
+                return res.status(400).json({
+                    status: false,
+                    message: 'All fileds are required',
+                })
+            }
+
+            const exam = await Exam.findById(id)
+            if (!exam) {
+                console.log('exam not found')
+                return res.status(400).json({
+                    status: false,
+                    message: 'Exam not found...'
+                })
+            }
+
+            const updateExam = await Exam.findByIdAndUpdate(id, {
+                $set: { name, subject, duration, marksPerQuestion, startDate, endDate }
+            })
+            if (!updateExam) {
+                console.log('failed to update exam')
+                return res.status(400).json({
+                    status: false,
+                    message: 'Exam not found...'
+                })
+            }
+            console.log('update successfull')
+            return res.status(200).json({
+                status: true,
+                message: 'Exam updated successfully...'
+            })
+
+
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: 'Somthing went worng...'
+            })
+        }
+    }
+
+    async addExams(req, res) {
+        const { name, subject, duration, marksPerQuestion, startDate, endDate } = req.body;
         // console.log(req.body)
-        if(!name || !subject || !duration || !totalMarks || !startDate){
+        if (!name || !subject || !duration || !marksPerQuestion || !startDate || !endDate) {
             return res.status(400).send('All fileds are reqired')
         }
-        const data = new Exam({name,subject,duration,totalMarks,startDate})
+        const data = new Exam({ name, subject, duration, marksPerQuestion, startDate, endDate })
         await data.save()
-        return res.redirect('/admin/adminDash')
+        return res.redirect('/admin/exam-list')
 
     }
 
-    async addQuestions(req,res){
+    async addQuestions(req, res) {
         try {
-            const {exam,questionText,options,correctAnswer} = req.body;
+            const { exam, questionText, options, correctAnswer } = req.body;
             console.log(req.body)
-            if(!exam||!questionText||!options||!correctAnswer){
-                return res.status(400).send('All fileds are reqired')
+            if (!exam || !questionText || !options || !correctAnswer) {
+                return res.status(400).json({ status: false, message: 'All fileds are required...' })
             }
             const examdata = await Exam.findById(exam)
-            const totalQuestions = await countQuestions(exam);
-            console.log(totalQuestions)
-            if(totalQuestions === 0){
-                return res.status(400).send('No questions assigned to this exam yet.')
-            }
-            const marksParQuestion = examdata.totalMarks / totalQuestions ;
+
+            if (!examdata) return res.status(400).json({ status: false, message: 'Such Exam not exists' })
+
+
             const data = new Question({
                 exam,
                 questionText,
                 options,
                 correctAnswer,
-                marks:marksParQuestion
             })
             await data.save();
-            return res.redirect('/admin/adminDash');
+            return res.redirect('/admin/question-list');
         } catch (error) {
             console.log(error)
-            return res.status(500).send('An error occurred while adding the question.');
+            return res.status(400).json({ status: false, message: 'An error occurred while adding the question.' })
         }
     }
 
@@ -127,7 +255,7 @@ class AdminController {
     async adminDash(req, res) {
         try {
             console.log(req.user)
-           
+
             const user = await Admin.findById(req.user._id)
             console.log(user)
             const users = await Admin.find()
@@ -139,16 +267,43 @@ class AdminController {
         }
     }
 
-    async listExaminee(req, res) {
+    async listExamineePg(req, res) {
         try {
             const users = await Student.find()
-            return res.render('./layouts/list-examinee', { users })
+            return res.render('./admin/list-examinee', { users })
 
 
         } catch (error) {
             console.log(error)
         }
     }
+
+    async getSingleStudent(req, res) {
+        try {
+            const id = req.params.id;
+            const student = await Student.findById(id);
+
+            if (!student) {
+                return res.status(400).json({
+                    status: false,
+                    message: 'Student not found',
+                })
+            }
+
+            return res.status(200).json({
+                status: true,
+                message: 'Student data fetched successfully',
+                data: student
+            })
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+                status: false,
+                message: 'Something went wrong'
+            })
+        }
+    }
+
 
     async editExamineePg(req, res) {
         try {
@@ -160,51 +315,71 @@ class AdminController {
         }
     }
 
-    async editExamineeForm(req,res){
+    async editExamineeForm(req, res) {
         try {
-            const {id} = req.params
+            const { id } = req.params
             const student = await Student.findById(id)
-            return res.render('./layouts/editForm',{student})
+            return res.render('./layouts/editForm', { student })
         } catch (error) {
             console.log(error)
             return res.send(error)
         }
     }
 
-    async allExams(req,res){
+    async allExamsPg(req, res) {
         try {
             const exams = await Exam.find()
-        return res.render('exam-list',{exams})
+            console.log('all exams')
+            return res.render('exam-list', { exams })
         } catch (error) {
             console.log(error)
             return res.send(error)
         }
     }
 
-    async addExamsPg(req,res){
+    async addExamsPg(req, res) {
         try {
             const exam = await Exam.find()
-            return res.render('addExam',{exam})
+            return res.render('addExam', { exam })
         } catch (error) {
             console.log(error)
             return res.send(error)
         }
     }
 
-    async allQuestions(req,res){
+    async QuestionsPg(req, res) {
         try {
-            const questions = await Question.find().populate('exam','name')
-            return res.render('allQuestions',{questions})
+            // const questions = await Question.find().populate('exam', 'name')
+            return res.render('allQuestions')
         } catch (error) {
             console.log(error)
             return res.status(400).send('failed to show questions ...')
         }
     }
 
-    async addQuestionsPg(req,res){
+    async allQuestions(req, res) {
+        try {
+            const allQuestions = await Question.find({}).populate('exam', 'name');
+
+            // Filter out questions where the populated exam is null
+            const questions = allQuestions.filter(question => question.exam !== null);
+            return res.status(200).json({
+                status: true,
+                massage: 'Question data fatched successfuly',
+                data: questions
+            })
+        } catch (error) {
+            return res.status(400).json({
+                status: false,
+                massage: 'Question data fatched failed',
+            })
+        }
+    }
+
+    async addQuestionsPg(req, res) {
         try {
             const exams = await Exam.find()
-            return res.render('addQuestions',{exams})
+            return res.render('addQuestions', { exams })
         } catch (error) {
             console.log(error)
             res.status(500).send("failed to show questions ...")

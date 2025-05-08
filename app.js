@@ -14,6 +14,9 @@ app.use(cookieParser())
 app.set('view engine', 'ejs')
 app.set('views', 'views')
 
+app.use(express.static('public'))
+
+
 app.use(session({
     secret: process.env.SECRET_KEY,
     resave: false,

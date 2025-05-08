@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard</title>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+    
+
+    <a class="navbar-brand" href="#">Student Dashboard</a>
+    <div class="ms-auto text-white">Welcome, John Doe</div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="container-fluid mt-4">
+    <div class="row">
+      <!-- Sidebar -->
+      <%-include('../layouts/studentSidebar.ejs') %>
+
+        <!-- Content Area -->
+        <div class="col-md-9">
+          <!-- Profile Card -->
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              <i class="fas fa-user"></i> Live Exams
+            </div>
+
+            <div class="card-body">
+              <div id="examCards" class="row">
+                <!-- Exams will dynamically be added here -->
+
+              </div>
+            </div>
+
+          </div>
+
+
+
+        </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      // fetch current exams
+      $.ajax({
+        url: '/student/current-exams', // backend route fetch
+        method: 'GET',
+        success: function (response) {
+          if(response.status){
+            console.log(response)
+            const now = new Date();
+            const exams = response.data.filter(exam=>{
+              const start = new Date(exam.startDate);
+              const end = new Date(exam.endDate);
+              console.log('start',start)
+              console.log('end',end)
+              console.log('result', now >= start && now <= end)
+              return now >= start && now <= end ;
+            })
+
+            if(exams.length === 0){
+              $('#examCards').html('<p class="text-center text-danger">No live exams available</p>');
+              return;
+            }
+
+
+
+            const examCards = exams.map(exam =>`
+                      <div class="col-md-4 mb-4">
+                        <div class="card shadow">
+                          <div class="card-header bg-success text-white">
+                            ${exam.name}
+                            </div>
+                            <div class="card-body">
+                              <p><strong>Subject:</strong>${exam.subject}</p>
+                              <p><strong>Date:</strong>${new Date(exam.startDate).toLocaleDateString()}</p>
+                              <p><strong>Date:</strong>${new Date(exam.endDate).toLocaleDateString()}</p>
+                              <p><strong>Duration:</strong>${exam.duration}</p>
+                              <p><strong>Total Marks:</strong>${exam.totalMarks}</p>
+                              <a href="/student/exam/${exam._id}/question/0" class="btn btn-primary w-100">Start Exam</a>
+                            </div>
+                          </div>
+                        </div>
+                    `);
+                    $('#examCards').html(examCards.join(''));
+          }else{
+            $('#examCards').html('<p class="text-center text-denger"> No exam available</p>')
+          }
+        },
+        error:function(){
+          $('#examCards').html(`<p class="text-center text-denger">${error.message}</p>`)
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>

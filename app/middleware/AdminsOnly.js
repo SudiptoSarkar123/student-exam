@@ -10,7 +10,7 @@ const AdminsOnly = async (req,res,next)=>{
 
         const decode = jwt.verify(token,process.env.SECRET_KEY);
         const user = await Admin.findOne({_id:decode._id})
-        if(!user)return res.send('Unauthorised: user not found Login page');
+        if(!user)return res.redirect('/admin/login');
         
         req.user = {
             _id: user._id,
