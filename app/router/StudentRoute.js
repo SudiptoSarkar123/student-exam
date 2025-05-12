@@ -15,9 +15,10 @@ router.get('/exams',StudentsOnly,studentController.allExamsPg)
 router.get('/current-exams',StudentsOnly,studentController.currentExams)
 
 // question
-router.get('/exam/:examId/question/:qIndex',StudentsOnly,studentController.oneQuestionAtATime)
+router.get('/exam/:examId/questionPg',StudentsOnly,studentController.questionPg)
+router.get('/exam/:examId/sideBar',StudentsOnly,studentController.loadSidebar)
+router.get('/exam/:examId/question/:qIndex',StudentsOnly,studentController.getOneQuestion) 
 // /student/exam/<%=examId%>/save/<%=qIndex%>
-router.post('/exam/:examId/save/:qIndex',StudentsOnly,studentController.saveAnswerAndNext)
 
 
 // result page

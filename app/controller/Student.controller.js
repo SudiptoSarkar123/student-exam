@@ -109,138 +109,68 @@ class studentController {
     }
 
     //Question
-    async oneQuestionAtATime(req,res){
+    async questionPg(req,res){
         try {
-            const examId = req.params.examId
-            const index = parseInt(req.params.qIndex);
-            const studentId = req.user._id;
-            // console.log(req.params)
-            const questions = await Question.find({exam:examId});
-            // console.log(questions)
+           const {examId} = req.params;
+        //    const qIndex = req.params.qIndex || 0 ;
+        //    const studentId = req.user._id;
 
-            if(index >= questions.length){
-                return res.redirect(`/student/exam/${examId}/review`);
-            }
+        //    Check if already submitted
+        //    const alreadySubmitted = await Result.findOne({
+        //     student:studentId,
+        //     exam:examId,
+        //    })
+        //    if(alreadySubmitted){
+        //     return res.status(500).json({
+        //         status:false,
+        //         message:'You have already subbmitted this exam.'
+        //     })
+        //    }
 
-            const currentQuestion = questions[index];
-            const totalQuestions = questions.length;
-
-            res.render('./student/question',{
-                examId,
-                question:currentQuestion,
-                qIndex:index,
-                totalQuestions
-            })
+           // Load exam and render page 
+        //    const exam = await Exam.findById(examId)
+           const totalQs = await Question.find({exam:examId})
+        //    const question = await Question.find({exam:examId})
+            // console.log('question',question[qIndex],'index',qIndex,'total questions',totalQuestions.length,'exam id',examId)
+            console.log('totalQs',totalQs.length)
+           return res.render('./student/question',{examId,totalQs:totalQs.length})
         } catch (error) {
+            
             console.log(error)
             return res.status(400).json({status:false,message:'Failed to load question page'})
         }
     }
-    
-    // /student/exam/<%=examId%>/save/<%=qIndex%>
-    async saveAnswerAndNext(req, res) {
+
+    async loadSidebar(req,res){
         try {
-            const studentId = req.user._id;
-            const { examId, qIndex } = req.params;
-            const { qId, answer } = req.body;
-    
-            // Validate student
-            const student = await Student.findById(studentId);
-            if (!student) {
-                return res.status(400).json({
-                    status: false,
-                    message: 'Unauthorized user'
-                });
-            }
-    
-            // Validate exam
-            const exam = await Exam.findById(examId);
-            if (!exam) {
-                return res.status(400).json({
-                    status: false,
-                    message: 'Exam not found'
-                });
-            }
-    
-            // Validate question
-            const question = await Question.findById(qId);
-            if (!question) {
-                return res.status(400).json({
-                    status: false,
-                    message: 'Unknown question'
-                });
-            }
-    
-            // Check if the answer is correct
-            const isCorrect = question.options[question.correctAnswer - 1] === answer;
-            console.log('IS CORRECT:', isCorrect);
-    
-            // Find or create a result for the student and exam
-            let result = await Result.findOne({ student: studentId, exam: examId });
-            if (!result) {
-                // Create a new result if none exists
-                result = new Result({
-                    student: studentId,
-                    exam: examId,
-                    score: 0,
-                    answers: []
-                });
-            }
-    
-            // Check if the question already exists in the answers array
-            const existingAnswerIndex = result.answers.findIndex(
-                (ans) => ans.question.toString() === question._id.toString()
-            );
-    
-            if (existingAnswerIndex !== -1) {
-                // Update the existing answer
-                result.answers[existingAnswerIndex].isCorrect = isCorrect;
-                result.answers[existingAnswerIndex].selectedAnswer = answer;
-                result.answers[existingAnswerIndex].correctAnswer =
-                    question.options[question.correctAnswer - 1];
-            } else {
-                // Add a new answer
-                result.answers.push({
-                    question: question._id,
-                    isCorrect,
-                    selectedAnswer: answer,
-                    correctAnswer: question.options[question.correctAnswer - 1]
-                });
-            }
-    
-            // Ensure markPerQuestion is a valid number
-            const markPerQuestion = exam.marksPerQuestion;
-            console.log(markPerQuestion,typeof(markPerQuestion))
-    
-            // Update the score
-            const correctAnswersCount = result.answers.filter((ans) => ans.isCorrect).length;
-            result.score = markPerQuestion * correctAnswersCount;
-    
-            // Calculate unanswered questions
-            const totalQuestions = await Question.countDocuments({ exam: examId });
-            const attemptedQuestions = result.answers.length;
-            const unansweredQuestions = totalQuestions - attemptedQuestions;
-            result.unanswered = unansweredQuestions;
-    
-            // Save the updated result
-            await result.save();
-    
-            // Check if this is the last question
-            if (parseInt(qIndex) + 1 >= totalQuestions) {
-                // Redirect to the result page
-                return res.redirect(`/student/exam/${examId}/result`);
-            }
-    
-            // Redirect to the next question
-            return res.redirect(`/student/exam/${examId}/question/${parseInt(qIndex) + 1}`);
+            console.log('i am in loadsidbar')
+            const {examId} = req.params;
+
+            // Fetch the total number of questions for the exam
+            const totalQuestions = await Question.countDocuments({exam:examId});
+
+            return res.json({totalQuestions})
         } catch (error) {
-            console.error('Error saving answer:', error);
-            return res.status(500).json({
-                status: false,
-                message: 'Failed to save answer'
-            });
+            console.log(error);
+            return res.status(500).json({status:false, message:'Failed to fetch questions'});
         }
     }
+    
+    // /student/exam/<%=examId%>/save/<%=qIndex%>
+    async getOneQuestion(req,res){
+        try {
+            const {examId,qIndex} = req.params;
+            const question = await Question.find({exam:examId}).skip(qIndex).limit(1);
+            if(!question || question.length === 0){
+                return res.status(404).json({status:false,message:'Question not found'})
+            }
+            return res.json(question[0]);
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({status:false,message:'Failed to fetch question'});
+        }
+    }
+   
 
     // Result 
     async showResult(req,res){
