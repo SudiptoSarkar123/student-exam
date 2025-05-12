@@ -200,8 +200,13 @@
     // Handle "Next" button click
     $("#nextBtn").click(function () {
       if (qIndex < totalQuestions - 1) {
+
+        
         qIndex++;
         loadQuestion(qIndex);
+         // Update the bold class in the sidebar
+    $('#questionList .nav-link').removeClass('fw-bold'); // Remove 'fw-bold' from all links
+    $(`#questionList .nav-link[data-index="${qIndex}"]`).addClass('fw-bold'); // Add 'fw-bold' to the current link
       } else {
         // Submit the exam
         const answers = JSON.parse(localStorage.getItem("examAnswers")) || {};
