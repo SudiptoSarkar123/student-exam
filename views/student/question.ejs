@@ -225,6 +225,9 @@
       if (qIndex > 0) {
         qIndex--;
         loadQuestion(qIndex);
+
+        $('#questionList .nav-link').removeClass('fw-bold')
+        $(`#questionList .nav-link[data-index=${qIndex}]`).addClass('fw-bold')
       }
     });
   });
