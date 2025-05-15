@@ -385,6 +385,11 @@ class AdminController {
             res.status(500).send("failed to show questions ...")
         }
     }
+
+    async adminLogout(req,res){
+         res.clearCookie("authToken")
+        return res.redirect('/admin/login')
+    }
 }
 
 

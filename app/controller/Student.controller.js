@@ -89,7 +89,11 @@ class studentController {
 
     async allExamsPg(req,res){
         try {
-            res.render('./student/exam-list')
+             const user = await Student.findById(req.user._id)
+            if(!user){
+                return res.status(404).json({status:false,message:'User not found'})
+            }
+            res.render('./student/exam-list',{user})
         } catch (error) {
             return res.status(400).json({status:false,message:'Failed to show live exams'})
         }
@@ -99,7 +103,7 @@ class studentController {
         try {
             const currentDate = new Date();
             const exams = await Exam.find({})   
-        
+           
 
             return res.status(200).json({status:true,data:exams})
         } catch (error) {
@@ -115,6 +119,10 @@ class studentController {
         //    const qIndex = req.params.qIndex || 0 ;
         //    const studentId = req.user._id;
 
+        const exam = await Exam.findById(examId)
+        if(!exam){
+            return res.status(404).json({status:false,message:'Exam not found'})
+        }
         //    Check if already submitted
         //    const alreadySubmitted = await Result.findOne({
         //     student:studentId,
@@ -133,7 +141,11 @@ class studentController {
         //    const question = await Question.find({exam:examId})
             // console.log('question',question[qIndex],'index',qIndex,'total questions',totalQuestions.length,'exam id',examId)
             console.log('totalQs',totalQs.length)
-           return res.render('./student/question',{examId,totalQs:totalQs.length})
+           return res.render('./student/question',{
+            examId,
+            totalQs:totalQs.length,
+            duration:exam.duration,
+        })
         } catch (error) {
             
             console.log(error)
@@ -171,48 +183,107 @@ class studentController {
         }
     }
    
+    // Submit exam 
 
-    // Result 
-    async showResult(req,res){
-        try {
-            const examId = req.params.examId;
+ async submitExam(req, res) {
+    try {
+        console.log('req.body',req.body)
+        const { examId } = req.params;
+        const { answers } = req.body;
+        const studentId = req.user._id;
 
-            const exam = await Exam.findById(examId);
-            const studentId = req.user._id;
+        console.log(answers);
+        // Fetch all questions for the exam
+        const questions = await Question.find({ exam: examId });
+        console.log(questions)
+        let score = 0;
+        let unanswered = 0;
+        const answerDetails = [];
 
-            const result = await Result.findOne({student:studentId,exam:examId});
-
-            if(!result){
-                return res.status(404).json({
-                    status: false,
-                    message: 'Result not found'
-                });
+        // Calculate the score
+        questions.forEach((question) => {
+            const submittedAnswer = answers[question._id];
+            const isCorrect = submittedAnswer?.trim().toLowerCase() === question.options[parseInt(question.correctAnswer) - 1]?.trim().toLowerCase();
+            console.log(isCorrect)
+            if (!submittedAnswer) {
+                unanswered++;
+            } else if (isCorrect) {
+                score++;
             }
 
-            const totalQuestions = await Question.countDocuments({exam:examId});
-            const attemptedQuestions = result.answers.length;
-            const unansweredQuestions = totalQuestions - attemptedQuestions;
-            const totalMarks = totalQuestions * exam.markPerQuestion;
-            const percentage = (result.score / totalMarks) * 100;
-
-            console.log('percentage',percentage)
-            console.log('total marks',totalMarks)
-            console.log('total questions',totalQuestions)
-            console.log('attempted questions',attemptedQuestions)
-            return res.render('./student/result',{
-                totalMarks,
-                unansweredQuestions,
-                percentage,
-                score:result.score
-            })
-        } catch (error) {
-            console.error('Error fetching result:', error);
-            return res.status(500).json({
-                status: false,
-                message: 'Failed to fetch result'
+            // Add answer details for this question
+            answerDetails.push({
+                question: question._id,
+                isCorrect,
+                selectedAnswer: submittedAnswer || null,
+                correctAnswer: question.correctAnswer,
             });
-        }
+        });
+
+        // Fetch the exam details to calculate total marks
+        const exam = await Exam.findById(examId);
+        const totalMarks = score * exam.marksPerQuestion;
+
+        console.log('total marks', totalMarks);
+
+        // Save the result in the database
+        const result = new Result({
+            student: studentId,
+            exam: examId,
+            score: totalMarks,
+            answers: answerDetails,
+            unanswered,
+        });
+
+        await result.save();
+
+        return res.status(200).json({
+            status: true,
+            message: 'Exam submitted successfully!',
+            result: {
+                totalMarks,
+                correctAnswers: score,
+                unansweredQuestions: unanswered,
+            },
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: false,
+            message: 'Failed to calculate result',
+        });
     }
+}
+
+    // Result 
+
+
+   async allResultsPg(req, res) {
+    try {
+        const studentId = req.user._id;
+        const user = await Student.findById(studentId);
+
+        // Aggregation to join Result with Exam and exam title
+        const results = await Result.aggregate([
+            { $match: { student: user._id } },
+            {
+                $lookup: {
+                    from: 'exams', // <-- correct spelling
+                    localField: 'exam',
+                    foreignField: '_id', // <-- correct spelling
+                    as: 'examInfo'
+                }
+            },
+            { $unwind: '$examInfo' },
+            { $sort: { createdAt: -1 } } // <-- correct spelling
+        ]);
+
+        res.render('student/allResults', { results, user });
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('Error loading results');
+    }
+}
     // Static methods
 
     async studentLoginPg(req, res) {
@@ -228,6 +299,11 @@ class studentController {
         } catch (error) {
             console.log(error)
         }
+    }
+
+    async logoutStudent(req,res){
+       res.clearCookie("authToken")
+        return res.redirect('/student/login')
     }
 }
 

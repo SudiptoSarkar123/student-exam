@@ -22,11 +22,15 @@ router.get('/exam/:examId/question/:qIndex',StudentsOnly,studentController.getOn
 
 
 // result page
-router.get('/exam/:examId/result',StudentsOnly,studentController.showResult)
+router.post('/exam/:examId/submit',StudentsOnly,studentController.submitExam)
+router.get('/exam/result',StudentsOnly,studentController.allResultsPg)
   
 // Static Routs
 router.get('/login',studentController.studentLoginPg)
 router.get('/register',studentController.studentRegisterPg)
+
+// logout
+router.get('/logout',StudentsOnly,studentController.logoutStudent)
 
 
 

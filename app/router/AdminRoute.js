@@ -40,6 +40,6 @@ router.get('/list-examinee',AdminsOnly,AdminController.listExamineePg)
 router.get('/edit-student',AdminsOnly,AdminController.editExamineePg)
 router.get('/edit-student-form/:id',AdminsOnly,AdminController.editExamineeForm)
 
-
+router.get('/logout',AdminsOnly,AdminController.adminLogout)
 
 module.exports = router ;
