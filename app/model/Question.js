@@ -9,7 +9,4 @@ const questionSchema = mongoose.Schema({
 },{timestamps:true})
 
 
-
-
-
 module.exports = mongoose.model('Question',questionSchema)
