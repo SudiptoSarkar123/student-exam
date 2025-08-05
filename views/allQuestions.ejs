@@ -28,178 +28,98 @@
                     <main>
                         <div class="container-fluid px-4">
                             <h1 class="mt-4">Question List</h1>
+                                                        <!-- Add this to your <head> if not already present -->
+                            <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+                            
+                            <!-- ...existing HTML... -->
+                            
                             <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
+                              <table id="questionsTable" class="table table-bordered table-striped">
                                 <thead class="table-dark">
-                                    <tr>
-                                        <!-- <th><input type="checkbox" id="selectAll"></th> -->
-                                        <th>Exam Name</th>
-                                        <th>Question</th>
-                                        <th>Options</th>
-                                        <th>Correct Answer</th>
-                                        <th>Marks</th>
-                                        <th>Action</th>
-                                    </tr>
+                                  <tr>
+                                    <th>Exam Name</th>
+                                    <th>Question</th>
+                                    <th>Options</th>
+                                    <th>Correct Answer</th>
+                                    <th>Marks</th>
+                                    <th>Action</th>
+                                  </tr>
                                 </thead>
-
                                 <tbody id="questionTableBody">
-                                    <!-- Dynamic rows will be inserted here -->
-
-
-
+                                  <!-- Dynamic rows will be inserted here -->
                                 </tbody>
-                                </table>
-                                <div class="modal fade" id="editExamModal" tabindex="-1"
-                                    aria-labelledby="editStudentModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
-
-                                        <form class="modal-content" id="edit-student-form">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Edit Exam</h5>
-                                                <button type="button" class="btn-close"
-                                                    data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                <div id="messageDiv" class="mb-3"></div>
-
-                                                <input type="hidden" id="examId" name="examId">
-                                                <div class="mb-3">
-                                                    <label for="examName" class="form-label">Exam Name</label>
-                                                    <input type="text" class="form-control" id="examName" name="name"
-                                                        placeholder="Enter exam name" required>
-                                                </div>
-                                                <!-- // Subject -->
-                                                <div class="mb-3">
-                                                    <label for="subject" class="form-label">Subject</label>
-                                                    <input type="text" class="form-control" id="subject" name="subject"
-                                                        placeholder="Enter subject" required>
-                                                </div>
-                                                <!-- // Exam Date -->
-
-                                                <div class="mb-3">
-                                                    <label for="date" class="form-label">Exam Date</label>
-                                                    <input type="date" class="form-control" id="date" name="startDate"
-                                                        required>
-                                                </div>
-
-                                                <!-- // Duration -->
-                                                <div class="mb-3">
-                                                    <label for="duration" class="form-label">Duration (in
-                                                        minutes)</label>
-                                                    <input type="number" class="form-control" id="duration"
-                                                        name="duration" placeholder="Enter duration" required>
-                                                </div>
-                                                <!-- Total marks -->
-
-                                                <div class="mb-3">
-                                                    <label for="totalMarks" class="form-label">Total Marks</label>
-                                                    <input type="number" class="form-control" id="totalMarks"
-                                                        name="totalMarks" placeholder="Enter total marks" required>
-                                                </div>
-
-                                            </div>
-
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-success">Save Changes</button>
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Cancel</button>
-                                            </div>
-                                        </form>
-
-
-                                    </div>
-                                </div>
+                              </table>
                             </div>
-
-                        </div>
-                    </main>
-                    <!-- footer section here -->
-
-                    <!-- footer section ends here -->
-                </div>
-        </div>
-
-        <script>
-            $(document).ready(function () {
-
-                function fetchQuestion() {
-
-                    $.ajax({
-                        url: '/admin/question',
-                        type: 'GET',
-                        success: function (response) {
-                            console.log(response);
-                            if (response.status) {
-                                let html = '';
-                                if (response.data.length > 0) {
-
-                                    for (const question of response.data) {
-                                        html += `
-                                    <tr>             
-                                        <td>${question.exam.name}</td>
-                                        <td>${question.questionText}</td>
-                                        <td>${question.options.join(' ,')}</td>
-                                        <td>${question.options[Number(question.correctAnswer)-1]}</td>
-                                        <td>${question.marks}</td>
-                                        <td class="text-center">
-                                        <button class="btn btn-sm btn-warning me-1 edit-btn" data-exam-id="${question._id}">Edit</button>
-                                        <button class="btn btn-sm btn-danger delete-btn" data-exam-id="${question._id}">Delete</button>
-                                        </td>
-                                     </tr>   
-                                    `
-
-                                    }
-
-                                } else {
-                                    html += '<tr><td colspan="4">No Questions found</td> <tr>'
+                            
+                            <!-- ...modal and other content... -->
+                            
+                            <!-- Scripts at the end of body -->
+                            <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2" ></script>
+                            <script>
+                            $(document).ready(function () {
+                                function fetchQuestions() {
+                                    $.ajax({
+                                        url: '/admin/question',
+                                        type: 'GET',
+                                        success: function (response) {
+                                            let html = '';
+                                            if (response.status && response.data.length > 0) {
+                                                for (const question of response.data) {
+                                                    html += `
+                                                        <tr>
+                                                            <td>${question.exam.name}</td>
+                                                            <td>${question.questionText}</td>
+                                                            <td>${question.options.join(' , ')}</td>
+                                                            <td>${question.options[Number(question.correctAnswer) - 1]}</td>
+                                                            <td>${question.marks}</td>
+                                                            <td class="text-center">
+                                                                <button class="btn btn-sm btn-warning me-1 edit-btn" data-exam-id="${question._id}">Edit</button>
+                                                                <button class="btn btn-sm btn-danger delete-btn" data-exam-id="${question._id}">Delete</button>
+                                                            </td>
+                                                        </tr>
+                                                    `;
+                                                }
+                                            } else {
+                                                html = '<tr><td colspan="6">No Questions found</td></tr>';
+                                            }
+                                            $('#questionTableBody').html(html);
+                            
+                                            // Destroy previous DataTable instance if exists
+                                            if (window.questionsDataTable) {
+                                                window.questionsDataTable.destroy();
+                                            }
+                                            // Initialize DataTable with pagination, search, and sort
+                                            window.questionsDataTable = new simpleDatatables.DataTable("#questionsTable", {
+                                                perPage: 5,
+                                                perPageSelect: [5, 10, 20, 50],
+                                                searchable: true,
+                                                sortable: true,
+                                                labels: {
+                                                    placeholder: "Search...",
+                                                    perPage: "{select} rows per page",
+                                                    noRows: "No questions found",
+                                                    info: "Showing {start} to {end} of {rows} questions"
+                                                }
+                                            });
+                                        }
+                                    });
                                 }
-
-                                $('#questionTableBody').html(html)
-
-
-                            }
-
-                        }
-                    })
-
-                }
-
-                $(document).on('click', '.edit-btn', function () {
-                    const studentId = $(this).data('student-id');
-                    editExamModal(studentId);
-                });
-
-
-
-                fetchQuestion();
-
-
-                function dispMessage(message, type = 'success') {
-                    $('#messageDiv').html(`
-  <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-    ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
-`);
-
-
-
-                }
-
-            })
-        </script>
-
-
+                            
+                                // Edit button handler (example, implement your modal logic)
+                                $(document).on('click', '.edit-btn', function () {
+                                    const examId = $(this).data('exam-id');
+                                    // Call your edit modal function here
+                                    // editExamModal(examId);
+                                    alert('Edit clicked for: ' + examId);
+                                });
+                            
+                                fetchQuestions();
+                            });
+                            </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
         <script src="/js/scripts.js"></script>
-        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"
-            crossorigin="anonymous"></script> -->
-        <!-- <script src="/assets/demo/chart-area-demo.js"></script> -->
-        <!-- <script src="/assets/demo/chart-bar-demo.js"></script> -->
-        <!-- <script src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
-            crossorigin="anonymous"></script>
-        <script src="/js/datatables-simple-demo.js"></script> -->
+       
 </body>
 
 </html>
